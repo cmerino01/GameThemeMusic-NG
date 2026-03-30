@@ -1,0 +1,102 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Check for version change
+        id: version
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if git show HEAD~1:package.json > /dev/null 2>&1; then
+            PREVIOUS=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          else
+            PREVIOUS=""
+          fi
+          echo "previous=$PREVIOUS" >> "$GITHUB_OUTPUT"
+          if [ "$CURRENT" != "$PREVIOUS" ] || [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run frontend tests
+        run: pnpm test
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python test dependencies
+        run: pip install pytest pytest-asyncio
+
+      - name: Run Python tests
+        run: pytest tests/ -v
+
+      - name: Build frontend
+        run: pnpm run build
+
+      - name: Download yt-dlp binary
+        run: |
+          curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux" -o bin/yt-dlp
+          chmod +x bin/yt-dlp
+
+      - name: Package plugin zip
+        run: |
+          PLUGIN_NAME="GameThemeMusic-NG"
+          VERSION="${{ github.ref_name }}"
+          mkdir -p "${PLUGIN_NAME}/bin"
+          cp -r dist "${PLUGIN_NAME}/"
+          cp bin/yt-dlp "${PLUGIN_NAME}/bin/"
+          cp main.py "${PLUGIN_NAME}/"
+          cp plugin.json "${PLUGIN_NAME}/"
+          cp package.json "${PLUGIN_NAME}/"
+          cp LICENSE "${PLUGIN_NAME}/"
+          cp README.md "${PLUGIN_NAME}/"
+          zip -r "${PLUGIN_NAME}-${VERSION}.zip" "${PLUGIN_NAME}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameThemeMusic-NG
+          path: GameThemeMusic-NG-*.zip
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: GameThemeMusic-NG-*.zip
+          generate_release_notes: true

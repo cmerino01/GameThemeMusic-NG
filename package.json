@@ -1,0 +1,57 @@
+{
+  "name": "gamethememusic-ng",
+  "version": "1.0.0",
+  "description": "Plays YouTube theme music on your Steam Deck game pages",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:python": "pytest tests/ -v",
+    "test:all": "vitest run && pytest tests/ -v"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SonicKurt/GameThemeMusic-NG.git"
+  },
+  "keywords": [
+    "decky",
+    "plugin",
+    "steam-deck",
+    "music",
+    "theme"
+  ],
+  "author": "SonicKurt",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@decky/rollup": "^1.0.2",
+    "@decky/ui": "^4.11.0",
+    "@rollup/rollup-linux-x64-musl": "^4.53.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "19.1.1",
+    "@types/react-dom": "19.1.1",
+    "@types/webpack": "^5.28.5",
+    "jsdom": "^29.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "rollup": "^4.53.3",
+    "typescript": "^5.6.2",
+    "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "@decky/api": "^1.1.3",
+    "localforage": "^1.10.0",
+    "react-icons": "^5.3.0",
+    "tslib": "^2.7.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react",
+        "react-dom"
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "GameThemeMusic-NG",
+  "author": "cmb",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["music", "theme", "audio", "youtube"],
+    "description": "Plays YouTube theme music on your game pages.",
+    "image": ""
+  }
+}
